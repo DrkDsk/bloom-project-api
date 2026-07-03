@@ -21,12 +21,20 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $credentialsJson = env('FIREBASE_CREDENTIALS_JSON');
-        $credentialsPath = env('FIREBASE_CREDENTIALS');
+        $credentialsPath = env('FIREBASE_CREDENTIALS', '/tmp/firebase-service-account.json');
 
-        if ($credentialsJson && $credentialsPath) {
-            File::ensureDirectoryExists(dirname($credentialsPath));
-
-            file_put_contents($credentialsPath, $credentialsJson);
+        if (! $credentialsJson) {
+            return;
         }
+
+        File::ensureDirectoryExists(dirname($credentialsPath));
+
+        file_put_contents($credentialsPath, $credentialsJson);
+
+        putenv("FIREBASE_CREDENTIALS={$credentialsPath}");
+        $_ENV['FIREBASE_CREDENTIALS'] = $credentialsPath;
+        $_SERVER['FIREBASE_CREDENTIALS'] = $credentialsPath;
+
+        logger('FIREBASE_CREDENTIALS: ' . $_ENV['FIREBASE_CREDENTIALS']);
     }
 }
